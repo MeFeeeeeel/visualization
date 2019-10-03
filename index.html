@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html style="height:100%;">
+<head>
+	<title></title>
+	<script src="./build/sigma.min.js"></script>
+	<style type="text/css">
+		html { height:100%;}
+		body {height: 100%;}
+		.box{width: 40px; height: 40px; background-color: lightgray; border: 1px solid black; float: left;}
+		#hanuel { width: 100%; height: 100%; }
+	</style>
+	<script src="https://code.jquery.com/jquery.min.js"></script>
+	<script type="text/javascript">
+		const line_length = 1
+
+		var instance_list = []
+		var compelete_instance = []
+		var convert_instance_list = []
+
+		var edges = []
+		var nodes = []
+
+		var sig = null
+
+
+		$(document).ready(function(){
+			sig = new sigma({
+				renderer: { container: document.getElementById('hanuel'), type:'canvas'},
+				settings: {defaultLabelColor: "white"}
+			})
+
+			draw_map()
+
+			$("button").click(function(){
+				edges = []
+				nodes = []
+				instance_list = []
+				convert_instance_list = []
+				compelete_instance = []
+				sig.graph.clear()
+
+				draw_map()
+			})
+		})
+
+
+		function return_position(x, y, degree, len){
+			var rst_x = x + len * Math.cos(Math.PI / 180 * degree)
+			var rst_y = y +  len * Math.sin(Math.PI / 180 * degree)
+			return [rst_x, rst_y]
+		}
+
+		function make_instance(x, y, type, code){
+			return JSON.parse('{"pos":[' + x + ', ' + y + '], "type":"' + type + '", "code": ' + code + '}')
+		}
+
+		function is_complete(code){
+			for (var i = 0; i < compelete_instance.length; i++){
+				if (compelete_instance[i] == code) 
+					return true
+			}
+
+			return false
+		}
+
+		function find_covert_instance(code){
+			for (var i = 0; i < convert_instance_list.length; i++){
+				if (convert_instance_list[i].code == code) 
+					return convert_instance_list[i]
+			}
+
+			return null
+		}
+
+
+		function find_instance(code){
+			for (var i = 0; i < instance_list.length; i++){
+				if (instance_list[i].code == code) 
+					return instance_list[i]
+			}
+
+			return null
+		}
+
+
+		function recurcive_instance(code, depth){
+			if (!is_complete(code)){
+				compelete_instance.push(code)
+				var instance = find_instance(code)
+				var convert_instance = find_covert_instance(code)
+				var pos = [0, 0]
+				if (convert_instance != null){
+					pos = [convert_instance.pos[0], convert_instance.pos[1]]
+				}
+
+				var around_cnt = instance.around.length
+				var degree = 360 / around_cnt
+
+				for (var j = 0; j < around_cnt; j++){
+					var acode = instance.around[j]
+					if (is_complete(acode))
+						continue
+
+					edges.push({
+						id: "e" + edges.length,
+						source: String(code),
+						target: String(acode),
+						color: "#00FF00",
+						type: 'line',
+						size: 2
+					})
+					var around_instance = find_instance(acode)
+					var this_degree = degree * j
+					var next_pos = return_position(pos[0], pos[1], this_degree, 5 - depth)
+					convert_instance_list.push(make_instance(next_pos[0], next_pos[1], around_instance.type, acode))
+					recurcive_instance(acode, depth + 1)				
+				}	
+
+			}
+		}
+
+		function make_map(data){
+			for (var i = 0; i < data.clouds.length; i++){
+				var cloud = data.clouds[i]
+				for (var j = 0; j < cloud.instance.length; j++){
+					var instance = cloud.instance[j]
+					instance_list.push(instance)
+				}
+			}
+
+			convert_instance_list.push(make_instance(0, 0, instance_list[0].type, instance_list[0].code))
+			recurcive_instance(convert_instance_list[0].code, 1)
+		}
+
+		function print(string){
+			console.log(string)
+		}
+
+		function data_parse(){
+			var obj = JSON.parse($("textarea").val())
+			return obj
+		}
+
+		function draw_map(){
+			var data = data_parse()
+			make_map(data)
+
+			for (var i = 0; i < convert_instance_list.length; i++){
+				var instance = convert_instance_list[i]
+				var cnt = find_instance(instance.code).around.length
+
+				if (cnt < 2){ 
+					cnt = 2
+				} else if (cnt < 5) {
+					cnt = 4
+				} else{
+					cnt = 6
+				}
+
+				nodes.push({
+					id: String(instance.code), 
+					label: instance.type,
+					x: instance.pos[0],
+					y: instance.pos[1],
+					color: '#FF7F00',
+					size: cnt
+				})
+			}
+
+			sig.graph.read({'nodes': nodes, 'edges': edges})
+			sig.refresh()
+		}
+
+	</script>
+
+</head>
+<body style="height:100%;">
+	<div id="hanuel" style="background-color: black; float: left; height: 70%; width: 90%;border: 1px solid black;"></div>		
+
+	<div style="height: 40%; width: 100%">
+		<textarea style="width:95%; height: 100%;;float: left;">
+			{
+				"clouds":[
+				{
+					"type": "aws", 
+					"instance": [
+					{"type": "ec2", "code":"1", "around":[2, 3]}, 
+					{"type": "rds", "code":"2", "around":[1]}
+					]
+				},
+				{
+					"type": "azure",
+					"instance": [{"type": "db", "code":"3", "around":[1, 4, 5, 6, 7]}]
+				},
+				{
+					"type": "gcp",
+					"instance": [
+					{"type": "com1", "code": "4", "around":[3]}, 
+					{"type": "com2", "code": "5", "around":[3]}, 
+					{"type": "com3", "code": "6", "around":[3, 11, 12, 13, 14]},
+					{"type": "com4", "code": "7", "around":[3]}
+					]
+				},
+				{
+					"type": "ncloud",
+					"instance": [
+					{"type": "cm1", "code": "11", "around":[6]},
+					{"type": "cm2", "code": "12", "around":[6]},
+					{"type": "cm3", "code": "13", "around":[6]},
+					{"type": "cm4", "code": "14", "around":[6]}
+					]
+				}				
+				]
+			}
+
+
+		</textarea>
+		<button style="height: 100%;float: left;">Click!</button>
+	</div>
+</body>
+</html>
