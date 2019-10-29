@@ -2,14 +2,15 @@
 <html style="height:100%;">
 <head>
 	<title></title>
-	<script src="./build/sigma.min.js"></script>
 	<style type="text/css">
 		html { height:100%;}
 		body {height: 100%;}
 		.box{width: 40px; height: 40px; background-color: lightgray; border: 1px solid black; float: left;}
 		#hanuel { width: 100%; height: 100%; }
 	</style>
+	<script src="cytoscape.min.js"></script>
 	<script src="https://code.jquery.com/jquery.min.js"></script>
+
 	<script type="text/javascript">
 		const line_length = 1
 
@@ -17,18 +18,13 @@
 		var compelete_instance = []
 		var convert_instance_list = []
 
-		var edges = []
-		var nodes = []
+		var instance_edges = []
+		var instance_nodes = []
 
-		var sig = null
+		var cyto = null
 
 
 		$(document).ready(function(){
-			sig = new sigma({
-				renderer: { container: document.getElementById('hanuel'), type:'canvas'},
-				settings: {defaultLabelColor: "white"}
-			})
-
 			draw_map()
 
 			$("button").click(function(){
@@ -42,6 +38,56 @@
 				draw_map()
 			})
 		})
+		var n1n2 = ''
+		function make_cytoscape(){
+			var style_str = "cytoscape.stylesheet()"
+			style_str += `.selector('node').css({
+				'height': 80,
+				'width': 80,
+				'background-fit': 'cover',
+				'border-color': '#000',
+				'border-width': 1,
+				'border-opacity': 0.5
+			})`
+
+			for(var i = 1; i <= instance_list.length; i++){
+				var id = "instance" + i;
+				style_str += 
+				".selector('#" + id +`')
+					.css({
+						'background-image': 'engine.png'
+					})`
+			}
+
+			cyto = cytoscape({
+				container: document.getElementById('hanuel'),
+				boxSelectionEnabled: false,
+				autounselectify: true,
+				wheelSensitivity: 0.5,
+				style: eval(style_str),
+				elements:{
+					nodes: instance_nodes,
+					edges: instance_edges
+				},
+				layout:{
+					name: 'breadthfirst',
+					directed: true,
+					padding: 10
+				}
+			})
+
+			cyto.on("tap", "node", (event) => {
+				n1n2 = event
+				cyto.edges().css('lineColor', 'gray')
+
+				cyto.nodes().css("opacity", "0.3")
+
+				event.target.connectedEdges().css('lineColor', 'red')
+
+    			event.target.css("opacity", "1")
+    			event.target.neighborhood().css("opacity", "1")
+			})
+		}
 
 
 		function return_position(x, y, degree, len){
@@ -49,6 +95,7 @@
 			var rst_y = y +  len * Math.sin(Math.PI / 180 * degree)
 			return [rst_x, rst_y]
 		}
+
 
 		function make_instance(x, y, type, code){
 			return JSON.parse('{"pos":[' + x + ', ' + y + '], "type":"' + type + '", "code": ' + code + '}')
@@ -101,14 +148,7 @@
 					if (is_complete(acode))
 						continue
 
-					edges.push({
-						id: "e" + edges.length,
-						source: String(code),
-						target: String(acode),
-						color: "#00FF00",
-						type: 'line',
-						size: 2
-					})
+					instance_edges.push({ data:{ source: "instance" + String(code), target: "instance" + String(acode) } })
 					var around_instance = find_instance(acode)
 					var this_degree = degree * j
 					var next_pos = return_position(pos[0], pos[1], this_degree, 5 - depth)
@@ -147,35 +187,20 @@
 
 			for (var i = 0; i < convert_instance_list.length; i++){
 				var instance = convert_instance_list[i]
-				var cnt = find_instance(instance.code).around.length
 
-				if (cnt < 2){ 
-					cnt = 2
-				} else if (cnt < 5) {
-					cnt = 4
-				} else{
-					cnt = 6
-				}
-
-				nodes.push({
-					id: String(instance.code), 
-					label: instance.type,
-					x: instance.pos[0],
-					y: instance.pos[1],
-					color: '#FF7F00',
-					size: cnt
-				})
+				instance_nodes.push({ data:{ id: "instance" + String(instance.code) } })
 			}
-
-			sig.graph.read({'nodes': nodes, 'edges': edges})
-			sig.refresh()
+			instance_nodes.push({data:{id:"page1"}})
+			instance_nodes[1].data.parent = "page1"
+			instance_nodes[2].data.parent = "page1"
+			make_cytoscape()
 		}
 
 	</script>
 
 </head>
 <body style="height:100%;">
-	<div id="hanuel" style="background-color: black; float: left; height: 70%; width: 90%;border: 1px solid black;"></div>		
+	<div id="hanuel" style="float: left; height: 70%; width: 90%;border: 1px solid black;"></div>		
 
 	<div style="height: 40%; width: 100%">
 		<textarea style="width:95%; height: 100%;;float: left;">
