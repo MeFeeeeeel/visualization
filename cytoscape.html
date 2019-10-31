@@ -12,11 +12,9 @@
 	<script src="https://code.jquery.com/jquery.min.js"></script>
 
 	<script type="text/javascript">
-		const line_length = 1
-
+		const val = '{"clouds":[{"type":"aws","instance":[{"type":"ec2","code":"1","around":[2,3]},{"type":"rds","code":"2","around":[1]}]},{"type":"azure","instance":[{"type":"db","code":"3","around":[1,4,5,6,7]}]},{"type":"gcp","instance":[{"type":"com1","code":"4","around":[3]},{"type":"com2","code":"5","around":[3]},{"type":"com3","code":"6","around":[3,11,12,13,14]},{"type":"com4","code":"7","around":[3]}]},{"type":"ncloud","instance":[{"type":"cm1","code":"11","around":[6]},{"type":"cm2","code":"12","around":[6]},{"type":"cm3","code":"13","around":[6]},{"type":"cm4","code":"14","around":[6]}]}]}'
 		var instance_list = []
 		var compelete_instance = []
-		var convert_instance_list = []
 
 		var instance_edges = []
 		var instance_nodes = []
@@ -89,75 +87,42 @@
 			})
 		}
 
-
-		function return_position(x, y, degree, len){
-			var rst_x = x + len * Math.cos(Math.PI / 180 * degree)
-			var rst_y = y +  len * Math.sin(Math.PI / 180 * degree)
-			return [rst_x, rst_y]
-		}
-
-
-		function make_instance(x, y, type, code){
-			return JSON.parse('{"pos":[' + x + ', ' + y + '], "type":"' + type + '", "code": ' + code + '}')
-		}
-
 		function is_complete(code){
 			for (var i = 0; i < compelete_instance.length; i++){
 				if (compelete_instance[i] == code) 
 					return true
 			}
-
 			return false
 		}
-
-		function find_covert_instance(code){
-			for (var i = 0; i < convert_instance_list.length; i++){
-				if (convert_instance_list[i].code == code) 
-					return convert_instance_list[i]
-			}
-
-			return null
-		}
-
 
 		function find_instance(code){
 			for (var i = 0; i < instance_list.length; i++){
 				if (instance_list[i].code == code) 
 					return instance_list[i]
 			}
-
 			return null
 		}
 
 
-		function recurcive_instance(code, depth){
-			if (!is_complete(code)){
-				compelete_instance.push(code)
-				var instance = find_instance(code)
-				var convert_instance = find_covert_instance(code)
-				var pos = [0, 0]
-				if (convert_instance != null){
-					pos = [convert_instance.pos[0], convert_instance.pos[1]]
-				}
-
+		function recurcive_instance(instance){
+			if (!is_complete(instance.code)){
+				compelete_instance.push(instance.code)
 				var around_cnt = instance.around.length
-				var degree = 360 / around_cnt
 
 				for (var j = 0; j < around_cnt; j++){
 					var acode = instance.around[j]
 					if (is_complete(acode))
 						continue
 
-					instance_edges.push({ data:{ source: "instance" + String(code), target: "instance" + String(acode) } })
+					instance_edges.push({ data:{ source: "instance" + String(instance.code), target: "instance" + String(acode) }})
 					var around_instance = find_instance(acode)
-					var this_degree = degree * j
-					var next_pos = return_position(pos[0], pos[1], this_degree, 5 - depth)
-					convert_instance_list.push(make_instance(next_pos[0], next_pos[1], around_instance.type, acode))
-					recurcive_instance(acode, depth + 1)				
+					recurcive_instance(find_instance(acode))				
 				}	
 
 			}
 		}
+
+
 
 		function make_map(data){
 			for (var i = 0; i < data.clouds.length; i++){
@@ -168,26 +133,15 @@
 				}
 			}
 
-			convert_instance_list.push(make_instance(0, 0, instance_list[0].type, instance_list[0].code))
-			recurcive_instance(convert_instance_list[0].code, 1)
-		}
-
-		function print(string){
-			console.log(string)
-		}
-
-		function data_parse(){
-			var obj = JSON.parse($("textarea").val())
-			return obj
+			recurcive_instance(instance_list[0])
 		}
 
 		function draw_map(){
-			var data = data_parse()
+			var data = JSON.parse(val)
 			make_map(data)
 
-			for (var i = 0; i < convert_instance_list.length; i++){
-				var instance = convert_instance_list[i]
-
+			for (var i = 0; i < instance_list.length; i++){
+				var instance = instance_list[i]
 				instance_nodes.push({ data:{ id: "instance" + String(instance.code) } })
 			}
 			instance_nodes.push({data:{id:"page1"}})
@@ -204,39 +158,7 @@
 
 	<div style="height: 40%; width: 100%">
 		<textarea style="width:95%; height: 100%;;float: left;">
-			{
-				"clouds":[
-				{
-					"type": "aws", 
-					"instance": [
-					{"type": "ec2", "code":"1", "around":[2, 3]}, 
-					{"type": "rds", "code":"2", "around":[1]}
-					]
-				},
-				{
-					"type": "azure",
-					"instance": [{"type": "db", "code":"3", "around":[1, 4, 5, 6, 7]}]
-				},
-				{
-					"type": "gcp",
-					"instance": [
-					{"type": "com1", "code": "4", "around":[3]}, 
-					{"type": "com2", "code": "5", "around":[3]}, 
-					{"type": "com3", "code": "6", "around":[3, 11, 12, 13, 14]},
-					{"type": "com4", "code": "7", "around":[3]}
-					]
-				},
-				{
-					"type": "ncloud",
-					"instance": [
-					{"type": "cm1", "code": "11", "around":[6]},
-					{"type": "cm2", "code": "12", "around":[6]},
-					{"type": "cm3", "code": "13", "around":[6]},
-					{"type": "cm4", "code": "14", "around":[6]}
-					]
-				}				
-				]
-			}
+
 
 
 		</textarea>
