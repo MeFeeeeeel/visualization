@@ -12,9 +12,15 @@
 	<script src="https://code.jquery.com/jquery.min.js"></script>
 
 	<script type="text/javascript">
-		const val = '{"clouds":[{"type":"aws","instance":[{"type":"ec2","code":"1","around":[2,3]},{"type":"rds","code":"2","around":[1]}]},{"type":"azure","instance":[{"type":"db","code":"3","around":[1,4,5,6,7]}]},{"type":"gcp","instance":[{"type":"com1","code":"4","around":[3]},{"type":"com2","code":"5","around":[3]},{"type":"com3","code":"6","around":[3,11,12,13,14]},{"type":"com4","code":"7","around":[3]}]},{"type":"ncloud","instance":[{"type":"cm1","code":"11","around":[6]},{"type":"cm2","code":"12","around":[6]},{"type":"cm3","code":"13","around":[6]},{"type":"cm4","code":"14","around":[6]}]}]}'
+		//const val = '{"clouds":[{"type":"aws","instance":[{"type":"ec2","code":"1","around":[2,3]},{"type":"rds","code":"2","around":[1]}]},{"type":"azure","instance":[{"type":"db","code":"3","around":[1,4,5,6,7]}]},{"type":"gcp","instance":[{"type":"com1","code":"4","around":[3]},{"type":"com2","code":"5","around":[3]},{"type":"com3","code":"6","around":[3,11,12,13,14]},{"type":"com4","code":"7","around":[3]}]},{"type":"ncloud","instance":[{"type":"cm1","code":"11","around":[6]},{"type":"cm2","code":"12","around":[6]},{"type":"cm3","code":"13","around":[6]},{"type":"cm4","code":"14","around":[6]}]}]}'
+		
+		const val = '{"clouds":[{"type":"aws","instance":[{"type":"ec2","code":"1","arounds":[{"id":"v1","type":"vpc","around":[2,3]}]},{"type":"rds","code":"2","arounds":[{"id":"v1","type":"vpc","around":[1,3]}]}]},{"type":"azure","instance":[{"type":"db","code":"3","arounds":[{"id":"v1","type":"vpc","around":[1,2]}]}]},{"type":"gcp","instance":[{"type":"com1","code":"4","arounds":[{"id":"v2","type":"vpc","around":[5,6,7,11]}]},{"type":"com2","code":"5","arounds":[{"id":"v2","type":"vpc","around":[4,6,7,11]}]},{"type":"com3","code":"6","arounds":[{"id":"v2","type":"vpc","around":[4,5,7,11]}]},{"type":"com4","code":"7","arounds":[{"id":"v2","type":"vpc","around":[4,5,6,11]}]}]},{"type":"ncloud","instance":[{"type":"cm1","code":"11","arounds":[{"id":"v2","type":"vpc","around":[4,5,6,7]}]},{"type":"cm2","code":"12","arounds":[{"id":"v3","type":"vpc","around":[13,14]}]},{"type":"cm3","code":"13","arounds":[{"id":"v3","type":"vpc","around":[12,14]}]},{"type":"cm4","code":"14","arounds":[{"id":"v3","type":"vpc","around":[12,13]}]}]}]}'
+
+
+		var around_list = []
 		var instance_list = []
 		var compelete_instance = []
+		var compelete_arounds = []
 
 		var instance_edges = []
 		var instance_nodes = []
@@ -87,7 +93,15 @@
 			})
 		}
 
-		function is_complete(code){
+		function is_complete_arounds(id){
+			for (var i = 0; i < compelete_arounds.length; i++){
+				if (compelete_arounds[i] == id)
+					return true
+			}
+			return false
+		}
+
+		function is_complete_instance(code){
 			for (var i = 0; i < compelete_instance.length; i++){
 				if (compelete_instance[i] == code) 
 					return true
@@ -103,26 +117,9 @@
 			return null
 		}
 
-
-		function recurcive_instance(instance){
-			if (!is_complete(instance.code)){
-				compelete_instance.push(instance.code)
-				var around_cnt = instance.around.length
-
-				for (var j = 0; j < around_cnt; j++){
-					var acode = instance.around[j]
-					if (is_complete(acode))
-						continue
-
-					instance_edges.push({ data:{ source: "instance" + String(instance.code), target: "instance" + String(acode) }})
-					var around_instance = find_instance(acode)
-					recurcive_instance(find_instance(acode))				
-				}	
-
-			}
+		function make_page(type, num){
+			return {data: {id: type + num}}
 		}
-
-
 
 		function make_map(data){
 			for (var i = 0; i < data.clouds.length; i++){
@@ -130,23 +127,49 @@
 				for (var j = 0; j < cloud.instance.length; j++){
 					var instance = cloud.instance[j]
 					instance_list.push(instance)
+					for (var k = 0; k < instance.arounds.length; k++){
+						around_list.push(instance.arounds[k])
+					}
 				}
 			}
-
-			recurcive_instance(instance_list[0])
 		}
+
+		function find_instance_nodes(id){
+			for (var i = 0; i < instance_nodes.length; i++){
+				if (instance_nodes[i].data.id == id)
+					return i
+			}
+			return -1
+		}
+
+		var gl = ''
 
 		function draw_map(){
 			var data = JSON.parse(val)
 			make_map(data)
-
+			gl = data
 			for (var i = 0; i < instance_list.length; i++){
 				var instance = instance_list[i]
 				instance_nodes.push({ data:{ id: "instance" + String(instance.code) } })
 			}
-			instance_nodes.push({data:{id:"page1"}})
-			instance_nodes[1].data.parent = "page1"
-			instance_nodes[2].data.parent = "page1"
+
+			for (var i = 0; i < around_list.length; i++){
+				var around = around_list[i]
+				instance_nodes.push(make_page(around.id, i))
+
+				for (var j = 0; j < around.around.length; j++){
+					var idx = find_instance_nodes("instance" + around.around[j])
+					instance_nodes[idx].data.parent = around.id + String(i)
+
+				}
+			}
+
+
+			// this is create edge code 
+			// we didn't use edge but ~~~
+			// instance_edges.push({ data:{ source: "instance" + String(instance.code), target: "instance" + String(acode) }})
+					
+
 			make_cytoscape()
 		}
 
