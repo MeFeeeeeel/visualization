@@ -1,188 +1,349 @@
 <!DOCTYPE html>
 <html style="height:100%;">
-<head>
-	<title></title>
-	<style type="text/css">
-		html { height:100%;}
-		body {height: 100%;}
-		.box{width: 40px; height: 40px; background-color: lightgray; border: 1px solid black; float: left;}
-		#hanuel { width: 100%; height: 100%; }
-	</style>
-	<script src="cytoscape.min.js"></script>
-	<script src="https://code.jquery.com/jquery.min.js"></script>
+  <head>
+    <title></title>
+    <style type="text/css">
+      html {
+        height: 100%;
+      }
+      body {
+        height: 100%;
+      }
+      .box {
+        width: 40px;
+        height: 40px;
+        background-color: lightgray;
+        border: 1px solid black;
+        float: left;
+      }
+      #hanuel {
+        width: 100%;
+        height: 100%;
+      }
+      .overview-body {
+        background-color: rgba(0, 0, 0, 0.03);
+      }
 
-	<script type="text/javascript">
-    	const val = `{'clouds': [{'type': 'aws', 'instance': [{'type': 'ec2', 'arounds': [{'type': 'vpc', 'id': 'vpc-e904c482', 'around': ['i-08de8a736ac672fc3', 'i-03b191c36d03ec8e7', 'i-0fb807f2f0de5d0db', 'i-0e6f538ceed326f4d']}], 'code': 'i-06b5f0d332021cbc1'}, {'type': 'ec2', 'arounds': [{'type': 'vpc', 'id': 'vpc-e904c482', 'around': ['i-06b5f0d332021cbc1', 'i-03b191c36d03ec8e7', 'i-0fb807f2f0de5d0db', 'i-0e6f538ceed326f4d']}], 'code': 'i-08de8a736ac672fc3'}, {'type': 'ec2', 'arounds': [{'type': 'vpc', 'id': 'vpc-e904c482', 'around': ['i-06b5f0d332021cbc1', 'i-08de8a736ac672fc3', 'i-0fb807f2f0de5d0db', 'i-0e6f538ceed326f4d']}], 'code': 'i-03b191c36d03ec8e7'}, {'type': 'ec2', 'arounds': [{'type': 'vpc', 'id': 'vpc-e904c482', 'around': ['i-06b5f0d332021cbc1', 'i-08de8a736ac672fc3', 'i-03b191c36d03ec8e7', 'i-0e6f538ceed326f4d']}], 'code': 'i-0fb807f2f0de5d0db'}, {'type': 'ec2', 'arounds': [{'type': 'vpc', 'id': 'vpc-e904c482', 'around': ['i-06b5f0d332021cbc1', 'i-08de8a736ac672fc3', 'i-03b191c36d03ec8e7', 'i-0fb807f2f0de5d0db']}], 'code': 'i-0e6f538ceed326f4d'}, {'type': 'ec2', 'arounds': [{'type': 'vpc', 'id': 'vpc-096dd0497219372e8', 'around': []}], 'code': 'i-0e825a076ae3c0a45'}], 'name': 'mfcloud'}]}`
-    
+      .overview-p {
+        display: inline;
+        font-size: 40px;
+        font-weight: 400%;
+        font-family: "Lato", sans-serif;
+      }
+    </style>
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+      integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+      crossorigin="anonymous"
+    />
+    <script src="cytoscape.min.js"></script>
+    <script src="https://code.jquery.com/jquery.min.js"></script>
 
-		var around_list = []
-		var instance_list = []
-		var compelete_instance = []
-		var compelete_arounds = []
+    <link
+      href="https://fonts.googleapis.com/css?family=Lato&display=swap"
+      rel="stylesheet"
+    />
 
-		var instance_edges = []
-		var instance_nodes = []
+    <script
+      src="https://kit.fontawesome.com/f51c7c1621.js"
+      crossorigin="anonymous"
+    ></script>
 
-		var cyto = null
+    <script type="text/javascript">
+      const val = `{'clouds': [{'type': 'aws', 'instance': [{'type': 'ec2', 'arounds': [{'type': 'vpc', 'id': 'vpc-e904c482', 'around': ['i-08de8a736ac672fc3', 'i-03b191c36d03ec8e7', 'i-0fb807f2f0de5d0db', 'i-0e6f538ceed326f4d']}], 'code': 'i-06b5f0d332021cbc1'}, {'type': 'ec2', 'arounds': [{'type': 'vpc', 'id': 'vpc-e904c482', 'around': ['i-06b5f0d332021cbc1', 'i-03b191c36d03ec8e7', 'i-0fb807f2f0de5d0db', 'i-0e6f538ceed326f4d']}], 'code': 'i-08de8a736ac672fc3'}, {'type': 'ec2', 'arounds': [{'type': 'vpc', 'id': 'vpc-e904c482', 'around': ['i-06b5f0d332021cbc1', 'i-08de8a736ac672fc3', 'i-0fb807f2f0de5d0db', 'i-0e6f538ceed326f4d']}], 'code': 'i-03b191c36d03ec8e7'}, {'type': 'ec2', 'arounds': [{'type': 'vpc', 'id': 'vpc-e904c482', 'around': ['i-06b5f0d332021cbc1', 'i-08de8a736ac672fc3', 'i-03b191c36d03ec8e7', 'i-0e6f538ceed326f4d']}], 'code': 'i-0fb807f2f0de5d0db'}, {'type': 'ec2', 'arounds': [{'type': 'vpc', 'id': 'vpc-e904c482', 'around': ['i-06b5f0d332021cbc1', 'i-08de8a736ac672fc3', 'i-03b191c36d03ec8e7', 'i-0fb807f2f0de5d0db']}], 'code': 'i-0e6f538ceed326f4d'}, {'type': 'ec2', 'arounds': [{'type': 'vpc', 'id': 'vpc-096dd0497219372e8', 'around': []}], 'code': 'i-0e825a076ae3c0a45'}], 'name': 'mfcloud'}]}`;
 
+      var around_list = [];
+      var instance_list = [];
+      var compelete_instance = [];
+      var compelete_arounds = [];
 
-		$(document).ready(function(){
-			draw_map()
+      var instance_edges = [];
+      var instance_nodes = [];
 
-			$("button").click(function(){
-				edges = []
-				nodes = []
-				instance_list = []
-				convert_instance_list = []
-				compelete_instance = []
-				sig.graph.clear()
+      var cyto = null;
 
-				draw_map()
-			})
-		})
-		var n1n2 = ''
-		function make_cytoscape(){
-			var style_str = "cytoscape.stylesheet()"
-			style_str += `.selector('node').css({
-				'height': 80,
-				'width': 80,
-				'background-fit': 'cover',
-				'border-color': '#000',
-				'border-width': 1,
-				'border-opacity': 0.5,
-				'label': 'data(id)'
-			})`
+      $(document).ready(function() {
+        $("#modal").modal({ show: false });
 
-			for(var i = 1; i <= instance_list.length; i++){
-				var id = "instance" + i;
-				style_str +=
-				".selector('#" + id +`')
-					.css({
-						'background-image': 'engine.png'
-					})`
-			}
+        draw_map();
 
-			cyto = cytoscape({
-				container: document.getElementById('hanuel'),
-				boxSelectionEnabled: false,
-				autounselectify: true,
-				wheelSensitivity: 0.5,
-				style: eval(style_str),
-				elements:{
-					nodes: instance_nodes,
-					edges: instance_edges
-				},
-				layout:{
-					name: 'grid',
-					directed: true,
-					padding: 10
-				}
-			})
+        $("button").click(function() {
+          edges = [];
+          nodes = [];
+          instance_list = [];
+          convert_instance_list = [];
+          compelete_instance = [];
+          sig.graph.clear();
 
-			cyto.on("tap", "node", (event) => {
-				n1n2 = event
-				alert("Click Node!")
-			})
-		}
+          draw_map();
+        });
+      });
 
-		function is_complete_arounds(id){
-			for (var i = 0; i < compelete_arounds.length; i++){
-				if (compelete_arounds[i] == id)
-					return true
-			}
-			return false
-		}
+      var n1n2 = "";
+      function make_cytoscape() {
+        var style_str = "cytoscape.stylesheet()";
+        style_str += `.selector('node').css({
+      	'height': 80,
+      	'width': 80,
+      	'background-fit': 'cover',
+      	'border-color': '#000',
+      	'border-width': 1,
+      	'border-opacity': 0.5,
+      	'label': 'data(id)'
+      })`;
 
-		function is_complete_instance(code){
-			for (var i = 0; i < compelete_instance.length; i++){
-				if (compelete_instance[i] == code)
-					return true
-			}
-			return false
-		}
+        // style_str += `.selector('.ec2').css({
+        //   'background-image': 'ec2.png'
+        //   })`;
 
-		function find_instance(code){
-			for (var i = 0; i < instance_list.length; i++){
-				if (instance_list[i].code == code)
-					return instance_list[i]
-			}
-			return null
-		}
+        for (var i = 1; i <= instance_list.length; i++) {
+          var id = "instance" + i;
+          style_str +=
+            ".selector('#" +
+            id +
+            `')
+      		.css({
+      			'background-image': 'engine.png'
+      		})`;
+        }
 
-		function make_page(type, num){
-			return {data: {id: type + num}}
-		}
+        cyto = cytoscape({
+          container: document.getElementById("hanuel"),
+          boxSelectionEnabled: false,
+          autounselectify: true,
+          wheelSensitivity: 0.5,
+          style: eval(style_str),
+          elements: {
+            nodes: instance_nodes,
+            edges: instance_edges
+          },
+          layout: {
+            name: "grid",
+            directed: true,
+            padding: 10
+          }
+        });
 
-		function make_map(data){
-			for (var i = 0; i < data.clouds.length; i++){
-				var cloud = data.clouds[i]
-				for (var j = 0; j < cloud.instance.length; j++){
-					var instance = cloud.instance[j]
-					instance_list.push(instance)
-					for (var k = 0; k < instance.arounds.length; k++){
-						around_list.push(instance.arounds[k])
-					}
-				}
-			}
-		}
+        cyto.on("tap", "node", function(event) {
+          const modal_body = document.querySelector(".modal-body");
+          const modal_parent_div = document.querySelector("#parent_name_div");
+          let instance_name = event.target.id();
+          let instance_type;
+          let provider;
+          let parent_name;
 
-		function find_instance_nodes(id){
-			for (let i = 0; i < instance_nodes.length; i++){
-				if (instance_nodes[i].data.id == id)
-					return i
-			}
-			return -1
-		}
+          for (let i = 0; i < gl.clouds.length; i++) {
+            let find_list = gl.clouds[i].instance.find(
+              find_list => find_list.code === instance_name
+            );
+            if (find_list) {
+              console.log(find_list, gl.clouds[i]);
+              instance_type = find_list.type;
+              provider = gl.clouds[i].type;
+            }
+          }
 
-		var gl = ''
+          if (event.target.parent().id()) {
+            parent_name = event.target.parent().id();
+            document.querySelector("#parent_name").innerText = parent_name;
+            modal_parent_div.style.display = "block";
+          } else {
+            document.querySelector("#parent_name").innerText = "";
+            modal_parent_div.style.display = "none";
+          }
 
-		function draw_map(){
-			let i;
-            const data = JSON.parse(val.replace(/'/gi, '"'));
-            make_map(data)
-			gl = data
-			
-			for (i = 0; i < instance_list.length; i++){
-                const instance = instance_list[i];
-                instance_nodes.push({ data:{ id: instance.code } })
-			}
+          document.querySelector("#instance_name").innerText = instance_name;
+          document.querySelector("#instance_type").innerText = instance_type;
+          document.querySelector("#provider").innerText = provider;
 
-			for (i = 0; i < around_list.length; i++){
-                const around = around_list[i];
-                if (around.around.length != 0)
-                    instance_nodes.push({data: {id: around.id}})
+          $("#modal").modal();
+        });
+      }
 
-				for (let j = 0; j < around.around.length; j++){
-                    const idx = find_instance_nodes(around.around[j]);
-                    instance_nodes[idx].data.parent = around.id
-				}
-			}
+      function is_complete_arounds(id) {
+        for (var i = 0; i < compelete_arounds.length; i++) {
+          if (compelete_arounds[i] == id) return true;
+        }
+        return false;
+      }
 
+      function is_complete_instance(code) {
+        for (var i = 0; i < compelete_instance.length; i++) {
+          if (compelete_instance[i] == code) return true;
+        }
+        return false;
+      }
 
-			// this is create edge code
-			// we didn't use edge but ~~~
-			// instance_edges.push({ data:{ source: "instance" + String(instance.code), target: "instance" + String(acode) }})
+      function find_instance(code) {
+        for (var i = 0; i < instance_list.length; i++) {
+          if (instance_list[i].code == code) return instance_list[i];
+        }
+        return null;
+      }
 
+      function make_page(type, num) {
+        return { data: { id: type + num } };
+      }
 
-			make_cytoscape()
-		}
+      function make_map(data) {
+        for (var i = 0; i < data.clouds.length; i++) {
+          var cloud = data.clouds[i];
+          for (var j = 0; j < cloud.instance.length; j++) {
+            var instance = cloud.instance[j];
+            instance_list.push(instance);
+            for (var k = 0; k < instance.arounds.length; k++) {
+              around_list.push(instance.arounds[k]);
+            }
+          }
+        }
+      }
 
+      function find_instance_nodes(id) {
+        for (let i = 0; i < instance_nodes.length; i++) {
+          if (instance_nodes[i].data.id == id) return i;
+        }
+        return -1;
+      }
 
+      var gl = "";
 
+      function draw_map() {
+        let i;
+        const data = JSON.parse(val.replace(/'/gi, '"'));
+        console.log(data);
+        make_map(data);
+        gl = data;
+        console.log(gl);
 
-	</script>
+        for (i = 0; i < instance_list.length; i++) {
+          const instance = instance_list[i];
+          instance_nodes.push({ data: { id: instance.code } });
+        }
 
-</head>
-<body style="height:100%;">
-	<div id="hanuel" style="float: left; height: 70%; width: 90%;border: 1px solid black;"></div>		
+        for (i = 0; i < around_list.length; i++) {
+          const around = around_list[i];
+          if (around.around.length != 0)
+            instance_nodes.push({ data: { id: around.id } });
 
-	<div style="height: 40%; width: 100%">
-		<textarea style="width:95%; height: 100%;;float: left;">
+          for (let j = 0; j < around.around.length; j++) {
+            const idx = find_instance_nodes(around.around[j]);
+            instance_nodes[idx].data.parent = around.id;
+          }
+        }
 
+        // this is create edge code
+        // we didn't use edge but ~~~
+        // instance_edges.push({ data:{ source: "instance" + String(instance.code), target: "instance" + String(acode) }})
 
+        make_cytoscape();
+      }
+    </script>
+  </head>
+  <body style="height:100%;">
+    <div
+      id="hanuel"
+      style="float: left; height: 70%; width: 90%;border: 1px solid black;"
+    ></div>
 
-		</textarea>
-		<button style="height: 100%;float: left;">Click!</button>
-	</div>
-</body>
+    <div style="height: 40%; width: 100%">
+      <textarea style="width:95%; height: 100%;;float: left;"> </textarea>
+      <button style="height: 100%;float: left;">Click!</button>
+    </div>
+
+    <div
+      class="modal fade"
+      id="modal"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="exampleModalCenterTitle"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLongTitle">
+              Instance Overview
+            </h5>
+            <button
+              type="button"
+              class="close"
+              data-dismiss="modal"
+              aria-label="Close"
+            >
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="container">
+              <div>
+                provider:
+                <p id="provider"></p>
+              </div>
+
+              <div>
+                instance_type:
+                <p id="instance_type"></p>
+              </div>
+
+              <div>
+                instance_name:
+                <p id="instance_name"></p>
+              </div>
+
+              <div id="parent_name_div">
+                parent_name:
+                <p id="parent_name"></p>
+              </div>
+
+              <div class="row mb-5">
+                <div class="col-2"></div>
+                <div class="card col-8 text-center overview-body">
+                  <div class="card-body">
+                    <i
+                      class="fas fa-check-circle text-muted fa-2x mr-1 ml-4"
+                    ></i>
+                    <p id="success_count" class="overview-p mr-5">1</p>
+                    <i
+                      class="fas fa-exclamation-triangle text-muted fa-2x mr-1"
+                    ></i>
+                    <p id="warning_count" class="overview-p mr-5">10</p>
+                    <i class="fas fa-times-circle text-muted fa-2x mr-1"></i>
+                    <p id="danger_count" class="overview-p mr-5">0</p>
+                  </div>
+                </div>
+                <div class="col-2"></div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-dismiss="modal"
+            >
+              Close
+            </button>
+            <button type="button" class="btn btn-primary">Save changes</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script
+      src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+      integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+      integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+      integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+      crossorigin="anonymous"
+    ></script>
+  </body>
 </html>
