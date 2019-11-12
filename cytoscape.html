@@ -1,88 +1,90 @@
 <!DOCTYPE html>
 <html style="height:100%;">
-  <head>
-    <title></title>
-    <style type="text/css">
-      html {
-        height: 100%;
-      }
-      body {
-        height: 100%;
-      }
-      .box {
-        width: 40px;
-        height: 40px;
-        background-color: lightgray;
-        border: 1px solid black;
-        float: left;
-      }
-      #hanuel {
-        width: 100%;
-        height: 100%;
-      }
-      .overview-body {
-        background-color: rgba(0, 0, 0, 0.03);
-      }
+<head>
+	<title></title>
+	<style type="text/css">
+		html {
+			height: 100%;
+		}
+		body {
+			height: 100%;
+		}
+		.box {
+			width: 40px;
+			height: 40px;
+			background-color: lightgray;
+			border: 1px solid black;
+			float: left;
+		}
+		#hanuel {
+			width: 100%;
+			height: 100%;
+		}
+		.overview-body {
+			background-color: rgba(0, 0, 0, 0.03);
+		}
 
-      .overview-p {
-        display: inline;
-        font-size: 40px;
-        font-weight: 400%;
-        font-family: "Lato", sans-serif;
-      }
-    </style>
+		.overview-p {
+			display: inline;
+			font-size: 40px;
+			font-weight: 400%;
+			font-family: "Lato", sans-serif;
+		}
+	</style>
 
-    <link
-      rel="stylesheet"
-      href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
-      integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
-      crossorigin="anonymous"
-    />
-    <script src="cytoscape.min.js"></script>
-    <script src="https://code.jquery.com/jquery.min.js"></script>
+	<link
+	rel="stylesheet"
+	href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+	integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+	crossorigin="anonymous"
+	/>
+	<script src="cytoscape.min.js"></script>
+	<script src="https://code.jquery.com/jquery.min.js"></script>
 
-    <link
-      href="https://fonts.googleapis.com/css?family=Lato&display=swap"
-      rel="stylesheet"
-    />
+	<link
+	href="https://fonts.googleapis.com/css?family=Lato&display=swap"
+	rel="stylesheet"
+	/>
 
-    <script
-      src="https://kit.fontawesome.com/f51c7c1621.js"
-      crossorigin="anonymous"
-    ></script>
+	<script
+	src="https://kit.fontawesome.com/f51c7c1621.js"
+	crossorigin="anonymous"
+	></script>
 
-    <script type="text/javascript">
-      const val = `{'clouds': [{'Data': {'database': {'terraform-20191001195726502900000001': {'SubnetId': ['subnet-497a8822', 'subnet-bebc9af2', 'subnet-1715ba6c'], 'VpcId': 'vpc-e904c482'}, 'database-server': {'SubnetId': ['subnet-03caf6545b12099f6', 'subnet-0e3bc50b2594c84c7', 'subnet-06ebe45115cf8c76a'], 'VpcId': 'vpc-04a58794b18d7adb2'}}, 'compute': {'i-0e825a076ae3c0a45': {'SubnetId': 'subnet-03def257f73fcb38d', 'VpcId': 'vpc-096dd0497219372e8'}}}, 'Name': 'aws', 'Vendor': 'aws'}]
-}`;
+	<script type="text/javascript">
+		const val = `
+		{'clouds': [{'Vendor': 'aws', 'Name': 'aws', 'Data': {'database': {'database-server': {'VpcId': 'vpc-04a58794b18d7adb2', 'SubnetId': ['subnet-03caf6545b12099f6', 'subnet-0e3bc50b2594c84c7', 'subnet-06ebe45115cf8c76a']}, 'terraform-20191001195726502900000001': {'VpcId': 'vpc-e904c482', 'SubnetId': ['subnet-497a8822', 'subnet-bebc9af2', 'subnet-1715ba6c']}}, 'compute': {'i-0e825a076ae3c0a45': {'VpcId': 'vpc-096dd0497219372e8', 'SubnetId': 'subnet-03def257f73fcb38d'}}}}, {'Vendor': 'openstack', 'Name': 'myopenstack', 'Data': {'compute': {'BB': {'VpcId': 'b39fd97e-8120-44f0-abf6-9e051117a695', 'SubnetId': 'fc520440-9a42-4c7d-bf27-da9cae8c7412'}, 'test_group': {'VpcId': 'b39fd97e-8120-44f0-abf6-9e051117a695', 'SubnetId': 'fc520440-9a42-4c7d-bf27-da9cae8c7412'}, 'cirros-pro': {'VpcId': 'b39fd97e-8120-44f0-abf6-9e051117a695', 'SubnetId': 'fc520440-9a42-4c7d-bf27-da9cae8c7412'}, 'CC': {'VpcId': '7c71cc70-93d6-4d2a-b2e7-96b0832acebe', 'SubnetId': 'ab809640-d08f-4183-8b30-70bc99712aad'}, 'AA': {'VpcId': '7c71cc70-93d6-4d2a-b2e7-96b0832acebe', 'SubnetId': 'ab809640-d08f-4183-8b30-70bc99712aad'}}}}]}
 
-      var instance_list = [];
-      var instance_dict = {};
-      var subnet_dict = {};
+		`;
 
-      var instance_edges = [];
-      var instance_nodes = [];
+		var instance_list = [];
+		var instance_dict = {};
+		var subnet_dict = {};
 
-      var cyto = null;
+		var instance_edges = [];
+		var instance_nodes = [];
 
-      $(document).ready(function() {
-        $("#modal").modal({ show: false });
-        draw_map();
+		var cyto = null;
 
-        $("button").click(function() {
-          edges = [];
-          nodes = [];
-          instance_list = [];
-          convert_instance_list = [];
-          compelete_instance = [];
-          sig.graph.clear();
+		$(document).ready(function() {
+			$("#modal").modal({ show: false });
+			draw_map();
 
-          draw_map();
-        });
-      });
-      var n1n2 = "";
-      function make_cytoscape() {
-        var style_str = "cytoscape.stylesheet()";
-        style_str += `.selector('node').css({
+			$("button").click(function() {
+				edges = [];
+				nodes = [];
+				instance_list = [];
+				convert_instance_list = [];
+				compelete_instance = [];
+				sig.graph.clear();
+
+				draw_map();
+			});
+		});
+		var n1n2 = "";
+		function make_cytoscape() {
+			var style_str = "cytoscape.stylesheet()";
+			style_str += `.selector('node').css({
 				'height': 80,
 				'width': 80,
 				'background-fit': 'cover',
@@ -95,40 +97,40 @@
 				'height': 0
 			})`;
 
-        for (var i = 1; i <= instance_list.length; i++) {
-          var id = "instance" + i;
-          style_str +=
-            ".selector('#" +
-            id +
-            `')
-					.css({
-						'background-image': 'engine.png'
-					})`;
-        }
+			for (var i = 1; i <= instance_list.length; i++) {
+				var id = "instance" + i;
+				style_str +=
+				".selector('#" +
+				id +
+				`')
+				.css({
+					'background-image': 'engine.png'
+				})`;
+			}
 
-        cyto = cytoscape({
-          container: document.getElementById("hanuel"),
-          boxSelectionEnabled: false,
-          autounselectify: true,
-          wheelSensitivity: 0.5,
-          style: eval(style_str),
-          elements: {
-            nodes: instance_nodes,
-            edges: instance_edges
-          },
-          layout: {
-            name: "circle"
-          }
-        });
+			cyto = cytoscape({
+				container: document.getElementById("hanuel"),
+				boxSelectionEnabled: false,
+				autounselectify: true,
+				wheelSensitivity: 0.5,
+				style: eval(style_str),
+				elements: {
+					nodes: instance_nodes,
+					edges: instance_edges
+				},
+				layout: {
+					name: "circle"
+				}
+			});
 
-        cyto.on("tap", "node", event => {
-          const modal_body = document.querySelector(".modal-body");
-          const modal_parent_div = document.querySelector("#parent_name_div");
-          let instance_name = event.target.id();
-          console.log(event.target.parent().id());
-          let instance_type;
-          let provider;
-          let parent_name;
+			cyto.on("tap", "node", event => {
+				const modal_body = document.querySelector(".modal-body");
+				const modal_parent_div = document.querySelector("#parent_name_div");
+				let instance_name = event.target.id();
+				console.log(event.target.parent().id());
+				let instance_type;
+				let provider;
+				let parent_name;
 
           // for (let i = 0; i < gl.clouds.length; i++) {
           //   let find_list = gl.clouds[i].Data.find(
@@ -144,12 +146,12 @@
           provider = gl.clouds[0].Vendor;
 
           if (event.target.parent().id()) {
-            parent_name = event.target.parent().id();
-            document.querySelector("#parent_name").innerText = parent_name;
-            modal_parent_div.style.display = "block";
+          	parent_name = event.target.parent().id();
+          	document.querySelector("#parent_name").innerText = parent_name;
+          	modal_parent_div.style.display = "block";
           } else {
-            document.querySelector("#parent_name").innerText = "";
-            modal_parent_div.style.display = "none";
+          	document.querySelector("#parent_name").innerText = "";
+          	modal_parent_div.style.display = "none";
           }
 
           document.querySelector("#instance_name").innerText = instance_name;
@@ -157,189 +159,194 @@
           document.querySelector("#provider").innerText = provider;
 
           $("#modal").modal();
-        });
+      });
+		}
+
+		function is_subnet_dict(subnet) {
+			for (var sub in subnet_dict) {
+				if (sub == subnet) {
+					return sub;
+				}
+			}
+			return false;
+		}
+
+		function make_map(data) {
+			for (var i = 0; i < data.clouds.length; i++) {
+
+				var cloud = data.clouds[i];
+				var cloud_id = "[" + cloud.Vendor + "] " + cloud.Name
+				instance_nodes.push({data:{id:cloud_id}})
+
+				var database = cloud.Data.database;
+				var compute = cloud.Data.compute;
+
+				for (var id in compute) {
+					instance_dict[id] = [compute[id].SubnetId];
+					if (!is_subnet_dict(compute[id].SubnetId)) {
+						subnet_dict[compute[id].SubnetId] = compute[id].VpcId;
+						instance_nodes.push({data:{id:compute[id].VpcId, parent:cloud_id}})
+					}
+
+					instance_list.push(id);
+				}
+
+				for (var id in database) {
+					instance_dict[id] = database[id].SubnetId;
+					for (var j = 0; j < database[id].SubnetId.length; j++) {
+						if (!is_subnet_dict(database[id].SubnetId[j])) {
+							subnet_dict[database[id].SubnetId[j]] = database[id].VpcId;
+						instance_nodes.push({data:{id:database[id].VpcId, parent:cloud_id}})
+						}
+					}
+
+					instance_list.push(id);
+				}
+			}
+		}
+
+		var gl = "";
+
+		function draw_map() {
+			let i;
+			const data = JSON.parse(val.replace(/'/gi, '"'));
+			make_map(data);
+			gl = data;
+
+			for (var idx in instance_dict) {
+				if (instance_dict[idx].length == 1) {
+					instance_nodes.push({
+						data: { id: idx, parent: instance_dict[idx][0] }
+					});
+				} else {
+					instance_nodes.push({
+						data: { id: idx, parent: subnet_dict[instance_dict[idx][0]] }
+					});
+
+					for (i = 0; i < instance_dict[idx].length; i++) {
+						instance_nodes.push({
+							data: { parent: instance_dict[idx][i] },
+							classes: "none"
+						});
+						instance_edges.push({
+							data: { source: idx, target: instance_dict[idx][i] }
+						});
+					}
+				}
+			}
+
+			for (var idx in subnet_dict) {
+				instance_nodes.push({ data: { id: idx, parent: subnet_dict[idx] } });
+          //instance_nodes.push({ data: { id: subnet_dict[idx] } });
       }
 
-      function is_subnet_dict(subnet) {
-        for (var sub in subnet_dict) {
-          if (sub == subnet) {
-            return sub;
-          }
-        }
-        return false;
-      }
+      make_cytoscape();
+  }
+</script>
+</head>
+<body style="height:100%;">
+	<div
+	id="hanuel"
+	style="float: left; height: 70%; width: 90%;border: 1px solid black;"
+	></div>
 
-      function make_map(data) {
-        for (var i = 0; i < data.clouds.length; i++) {
-          var cloud = data.clouds[i];
+	<div style="height: 40%; width: 100%">
+		<textarea style="width:95%; height: 100%;;float: left;"> </textarea>
+		<button style="height: 100%;float: left;">Click!</button>
+	</div>
+	<div
+	class="modal fade"
+	id="modal"
+	tabindex="-1"
+	role="dialog"
+	aria-labelledby="exampleModalCenterTitle"
+	aria-hidden="true"
+	>
+	<div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title" id="exampleModalLongTitle">
+					Instance Overview
+				</h5>
+				<button
+				type="button"
+				class="close"
+				data-dismiss="modal"
+				aria-label="Close"
+				>
+				<span aria-hidden="true">&times;</span>
+			</button>
+		</div>
+		<div class="modal-body">
+			<div class="container">
+				<div>
+					provider:
+					<p id="provider"></p>
+				</div>
 
-          var database = cloud.Data.database;
-          var compute = cloud.Data.compute;
+				<div>
+					instance_type:
+					<p id="instance_type"></p>
+				</div>
 
-          for (var id in compute) {
-            instance_dict[id] = [compute[id].SubnetId];
-            if (!is_subnet_dict(compute[id].SubnetId)) {
-              subnet_dict[compute[id].SubnetId] = compute[id].VpcId;
-            }
+				<div>
+					instance_name:
+					<p id="instance_name"></p>
+				</div>
 
-            instance_list.push(id);
-          }
+				<div id="parent_name_div">
+					parent_name:
+					<p id="parent_name"></p>
+				</div>
 
-          for (var id in database) {
-            instance_dict[id] = database[id].SubnetId;
-            for (var i = 0; i < database[id].SubnetId.length; i++) {
-              if (!is_subnet_dict(database[id].SubnetId[i])) {
-                subnet_dict[database[id].SubnetId[i]] = database[id].VpcId;
-              }
-            }
+				<div class="row mb-5">
+					<div class="col-2"></div>
+					<div class="card col-8 text-center overview-body">
+						<div class="card-body">
+							<i
+							class="fas fa-check-circle text-muted fa-2x mr-1 ml-4"
+							></i>
+							<p id="success_count" class="overview-p mr-5">1</p>
+							<i
+							class="fas fa-exclamation-triangle text-muted fa-2x mr-1"
+							></i>
+							<p id="warning_count" class="overview-p mr-5">10</p>
+							<i class="fas fa-times-circle text-muted fa-2x mr-1"></i>
+							<p id="danger_count" class="overview-p mr-5">0</p>
+						</div>
+					</div>
+					<div class="col-2"></div>
+				</div>
+			</div>
+		</div>
+		<div class="modal-footer">
+			<button
+			type="button"
+			class="btn btn-secondary"
+			data-dismiss="modal"
+			>
+			Close
+		</button>
+		<button type="button" class="btn btn-primary">Save changes</button>
+	</div>
+</div>
+</div>
+</div>
 
-            instance_list.push(id);
-          }
-        }
-      }
-
-      var gl = "";
-
-      function draw_map() {
-        let i;
-        const data = JSON.parse(val.replace(/'/gi, '"'));
-        make_map(data);
-        gl = data;
-
-        for (var idx in instance_dict) {
-          if (instance_dict[idx].length == 1) {
-            instance_nodes.push({
-              data: { id: idx, parent: instance_dict[idx][0] }
-            });
-          } else {
-            instance_nodes.push({
-              data: { id: idx, parent: subnet_dict[instance_dict[idx][0]] }
-            });
-
-            for (i = 0; i < instance_dict[idx].length; i++) {
-              instance_nodes.push({
-                data: { parent: instance_dict[idx][i] },
-                classes: "none"
-              });
-              instance_edges.push({
-                data: { source: idx, target: instance_dict[idx][i] }
-              });
-            }
-          }
-        }
-
-        for (var idx in subnet_dict) {
-          instance_nodes.push({ data: { id: idx, parent: subnet_dict[idx] } });
-          instance_nodes.push({ data: { id: subnet_dict[idx] } });
-        }
-
-        make_cytoscape();
-      }
-    </script>
-  </head>
-  <body style="height:100%;">
-    <div
-      id="hanuel"
-      style="float: left; height: 70%; width: 90%;border: 1px solid black;"
-    ></div>
-
-    <div style="height: 40%; width: 100%">
-      <textarea style="width:95%; height: 100%;;float: left;"> </textarea>
-      <button style="height: 100%;float: left;">Click!</button>
-    </div>
-    <div
-      class="modal fade"
-      id="modal"
-      tabindex="-1"
-      role="dialog"
-      aria-labelledby="exampleModalCenterTitle"
-      aria-hidden="true"
-    >
-      <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="exampleModalLongTitle">
-              Instance Overview
-            </h5>
-            <button
-              type="button"
-              class="close"
-              data-dismiss="modal"
-              aria-label="Close"
-            >
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          <div class="modal-body">
-            <div class="container">
-              <div>
-                provider:
-                <p id="provider"></p>
-              </div>
-
-              <div>
-                instance_type:
-                <p id="instance_type"></p>
-              </div>
-
-              <div>
-                instance_name:
-                <p id="instance_name"></p>
-              </div>
-
-              <div id="parent_name_div">
-                parent_name:
-                <p id="parent_name"></p>
-              </div>
-
-              <div class="row mb-5">
-                <div class="col-2"></div>
-                <div class="card col-8 text-center overview-body">
-                  <div class="card-body">
-                    <i
-                      class="fas fa-check-circle text-muted fa-2x mr-1 ml-4"
-                    ></i>
-                    <p id="success_count" class="overview-p mr-5">1</p>
-                    <i
-                      class="fas fa-exclamation-triangle text-muted fa-2x mr-1"
-                    ></i>
-                    <p id="warning_count" class="overview-p mr-5">10</p>
-                    <i class="fas fa-times-circle text-muted fa-2x mr-1"></i>
-                    <p id="danger_count" class="overview-p mr-5">0</p>
-                  </div>
-                </div>
-                <div class="col-2"></div>
-              </div>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button
-              type="button"
-              class="btn btn-secondary"
-              data-dismiss="modal"
-            >
-              Close
-            </button>
-            <button type="button" class="btn btn-primary">Save changes</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <script
-      src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
-      integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
-      crossorigin="anonymous"
-    ></script>
-    <script
-      src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
-      integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
-      crossorigin="anonymous"
-    ></script>
-    <script
-      src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
-      integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
-      crossorigin="anonymous"
-    ></script>
-  </body>
+<script
+src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+crossorigin="anonymous"
+></script>
+<script
+src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+crossorigin="anonymous"
+></script>
+<script
+src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+crossorigin="anonymous"
+></script>
+</body>
 </html>
