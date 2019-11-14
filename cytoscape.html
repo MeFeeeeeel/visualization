@@ -30,6 +30,10 @@
         font-weight: 400%;
         font-family: "Lato", sans-serif;
       }
+
+      .aws-database {
+        background-image: "img/database-solid-aws.png";
+      }
     </style>
 
     <link
@@ -53,7 +57,7 @@
 
     <script type="text/javascript">
       const val = `{'clouds': [{'Data': {'database': {'terraform-20191001195726502900000001': {'SubnetId': ['subnet-497a8822', 'subnet-bebc9af2', 'subnet-1715ba6c'], 'VpcId': 'vpc-e904c482'}, 'database-server': {'SubnetId': ['subnet-03caf6545b12099f6', 'subnet-0e3bc50b2594c84c7', 'subnet-06ebe45115cf8c76a'], 'VpcId': 'vpc-04a58794b18d7adb2'}}, 'compute': {'i-0e825a076ae3c0a45': {'SubnetId': 'subnet-03def257f73fcb38d', 'VpcId': 'vpc-096dd0497219372e8'}}}, 'Name': 'aws', 'Vendor': 'aws'}]
-}`;
+      }`;
 
       var instance_list = [];
       var instance_dict = {};
@@ -83,27 +87,43 @@
       function make_cytoscape() {
         var style_str = "cytoscape.stylesheet()";
         style_str += `.selector('node').css({
-				'height': 80,
-				'width': 80,
-				'background-fit': 'cover',
-				'border-color': '#000',
-				'border-width': 1,
-				'border-opacity': 0.5,
-				'label': 'data(id)',
-			}).selector('.none').css({
-				'width': 0,
-				'height': 0
-			})`;
+      				'height': 80,
+      				'width': 80,
+      				'background-fit': 'cover',
+      				'border-color': '#000',
+      				'border-width': 1,
+      				'border-opacity': 0.5,
+      				'label': 'data(id)',
+      			}).selector('.none').css({
+      				'width': 0,
+      				'height': 0
+      			})`;
 
-        for (var i = 1; i <= instance_list.length; i++) {
-          var id = "instance" + i;
+        for (var i = 0; i < instance_list.length; i++) {
+          let id = instance_list[i];
+          let type;
+          let vendor;
+
+          for (let j = 0; j < gl.clouds.length; j++) {
+            let find_compute = gl.clouds[j].Data.compute[id];
+            let find_database = gl.clouds[j].Data.database[id];
+            if (find_compute) {
+              type = "server";
+              vendor = gl.clouds[j].Vendor;
+            }
+            if (find_database) {
+              type = "database";
+              vendor = gl.clouds[j].Vendor;
+            }
+          }
           style_str +=
             ".selector('#" +
             id +
             `')
-					.css({
-						'background-image': 'engine.png'
-					})`;
+      					.css({
+      						'background-image': '${type}-solid-${vendor}.png'
+      					})`;
+          console.log(id, type, vendor);
         }
 
         cyto = cytoscape({
@@ -125,6 +145,7 @@
           const modal_body = document.querySelector(".modal-body");
           const modal_parent_div = document.querySelector("#parent_name_div");
           let instance_name = event.target.id();
+          console.log(event.target);
           console.log(event.target.parent().id());
           let instance_type;
           let provider;
