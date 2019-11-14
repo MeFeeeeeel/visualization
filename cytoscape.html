@@ -97,16 +97,32 @@
 				'height': 0
 			})`;
 
-			for (var i = 1; i <= instance_list.length; i++) {
-				var id = "instance" + i;
-				style_str +=
-				".selector('#" +
-				id +
-				`')
-				.css({
-					'background-image': 'engine.png'
-				})`;
-			}
+        for (var i = 0; i < instance_list.length; i++) {
+          let id = instance_list[i];
+          let type;
+          let vendor;
+
+          for (let j = 0; j < gl.clouds.length; j++) {
+            let find_compute = gl.clouds[j].Data.compute[id];
+            let find_database = gl.clouds[j].Data.database[id];
+            if (find_compute) {
+              type = "server";
+              vendor = gl.clouds[j].Vendor;
+            }
+            if (find_database) {
+              type = "database";
+              vendor = gl.clouds[j].Vendor;
+            }
+          }
+          style_str +=
+            ".selector('#" +
+            id +
+            `')
+      					.css({
+      						'background-image': '${type}-solid-${vendor}.png'
+      					})`;
+          console.log(id, type, vendor);
+        }
 
 			cyto = cytoscape({
 				container: document.getElementById("hanuel"),
