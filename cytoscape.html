@@ -57,6 +57,34 @@
 
 		`;
 
+		const check_val = `
+			{
+				"aws":{
+					"point": "3/5",
+					"i-0e825a076ae3c0a45": "5/7"
+				}
+			}
+		`
+
+		var test_check = JSON.parse(check_val)
+
+		function find_point(vendor, id){
+			if (test_check[vendor] == null){
+				return "0/6"
+			}
+
+			if (test_check[vendor][id] == null){
+				return "0/0"
+//				return test_check[vendor].point
+			} else {
+				if (test_check[vendor][id] == null)
+					return "0/6"
+				else
+					return test_check[vendor][id]
+			}
+
+		}
+
 		var instance_list = [];
 		var instance_dict = {};
 		var subnet_dict = {};
@@ -76,7 +104,6 @@
 				instance_list = [];
 				convert_instance_list = [];
 				compelete_instance = [];
-				sig.graph.clear();
 
 				draw_map();
 			});
@@ -95,14 +122,15 @@
 			}).selector('.none').css({
 				'width': 0,
 				'height': 0
+			}).selector('.warning').css({
+				'border-color': 'red',
+				'border-width': 4
 			})`;
 
 			for (var i = 1; i <= instance_list.length; i++) {
 				var id = "instance" + i;
 				style_str +=
-				".selector('#" +
-				id +
-				`')
+				".selector('#" + id + `')
 				.css({
 					'background-image': 'engine.png'
 				})`;
@@ -185,7 +213,7 @@
 					instance_dict[id] = [compute[id].SubnetId];
 					if (!is_subnet_dict(compute[id].SubnetId)) {
 						subnet_dict[compute[id].SubnetId] = compute[id].VpcId;
-						instance_nodes.push({data:{id:compute[id].VpcId, parent:cloud_id}})
+						instance_nodes.push({data:{id:compute[id].VpcId, parent:cloud_id}})						
 					}
 
 					instance_list.push(id);
@@ -215,9 +243,15 @@
 
 			for (var idx in instance_dict) {
 				if (instance_dict[idx].length == 1) {
-					instance_nodes.push({
+					var p = find_point("aws", idx)
+					var in_data = {
 						data: { id: idx, parent: instance_dict[idx][0] }
-					});
+					}
+					console.log(p + " " + idx)
+					if (p.split("/")[1] != "0"){
+						in_data['classes'] = 'warning'
+					}
+					instance_nodes.push(in_data);
 				} else {
 					instance_nodes.push({
 						data: { id: idx, parent: subnet_dict[instance_dict[idx][0]] }
