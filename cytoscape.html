@@ -126,17 +126,6 @@
 				'border-color': 'red',
 				'border-width': 4
 			})`;
-
-<<<<<<< HEAD
-			for (var i = 1; i <= instance_list.length; i++) {
-				var id = "instance" + i;
-				style_str +=
-				".selector('#" + id + `')
-				.css({
-					'background-image': 'engine.png'
-				})`;
-			}
-=======
         for (var i = 0; i < instance_list.length; i++) {
           let id = instance_list[i];
           let type;
@@ -163,7 +152,6 @@
       					})`;
           console.log(id, type, vendor);
         }
->>>>>>> 297c29212b31d68853e7699e9ba9aa089f473a0f
 
 			cyto = cytoscape({
 				container: document.getElementById("hanuel"),
