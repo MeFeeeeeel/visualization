@@ -180,20 +180,30 @@
 		var n1n2 = "";
 		function make_cytoscape() {
 			var style_str = "cytoscape.stylesheet()";
-			style_str += `.selector('node').css({'height': 80,'width': 80,'background-fit': 'cover','border-opacity': 0.5,'label': 'data(id)', 'color': 'black', "border-color": 'black', "border-opacity": "1", 'border-width': '2px'})
+			style_str += `.selector('node').css({'height': 80,'width': 80,'background-fit': 'cover','border-opacity': 0.5,'label': 'data(id)', 'color': 'black', "border-color": 'black', "border-opacity": "1", 'border-width': '2px', 'background-color':'white', 'shape': 'round-rectangle'})
 	  			.selector('.none').css({'display': 'none'})
 	  			.selector('.warning').css({'border-color': 'red', 'border-width': '3px', "border-opacity": "0.8"})
 				.selector('.router').css({'line-color': '#4c505f'})
 				.selector('.database').css({'line-color': 'green'})
-				.selector('.vendor').css({'font-size': '40px', 'color':'black', 'border-width': '5px'})`;
+				.selector('.subnet').css({'width': '100px', 'height': '100px'})
+				.selector('.vpc').css({'width': '120px', 'height': '120px'})
+				.selector('.vendor').css({'font-size': '40px', 'color':'black', 'border-width': '5px', 'width': '160px', 'height': '160px'})`;
 
 			for (var i = 0; i < instance_list.length; i++) {
 				let id = instance_list[i];
 				let type = find_instance_type(id);
 				let vendor = find_provider(id);
 
-				style_str += ".selector('#" + id + "').css({'background-image': '/Media/Media/img/" + type + "-solid-" + vendor + ".png', 'background-color':'white', 'shape': 'round-rectangle'})"
-			}
+			    style_str += ".selector('#" + id + "').css({'background-image': '/Media/Media/img/" + type + "-solid-" + vendor + ".png'})"
+            }
+            
+            for (var i = 0; i < instance_nodes.length; i++){
+                if ("parent" in instance_nodes[i].data && instance_nodes[i].data.id != undefined){
+                    var parent_id = instance_nodes[i].data.parent
+                    instance_edges.push({data:{source: instance_nodes[i].data.id, target:parent_id}})
+                    delete instance_nodes[i].data.parent
+                }
+            }
 
 			cyto = cytoscape({
 				container: document.getElementById("haneul"),
@@ -206,7 +216,7 @@
 					edges: instance_edges
 				},
 				layout: {
-					name: "circle"
+					name: "cose"
 				}
 			});
 
@@ -303,10 +313,10 @@
 					instance_dict[id] = [compute[id].SubnetId];
 					if (!is_subnet_dict(compute[id].SubnetId)) {
 						subnet_dict[compute[id].SubnetId] = compute[id].VpcId;
-						var in_data = { data: { id: compute[id].VpcId, parent: cloud_id } }
+						var in_data = { data: { id: compute[id].VpcId, parent: cloud_id }, classes: ['vpc'] }
 
 						if (find_point(compute[id].VpcId).split("/")[1] != "0") {
-							in_data['classes'] = ['warning']
+							in_data['classes'] = ['warning', 'vpc']
 						}
 
 						instance_nodes.push(in_data)
@@ -327,31 +337,23 @@
 						continue
 					}
 
-					instance_dict[id] = database[id].SubnetId;
-					for (var j = 0; j < database[id].SubnetId.length; j++) {
-						if (!is_subnet_dict(database[id].SubnetId[j])) {
-							subnet_dict[database[id].SubnetId[j]] = database[id].VpcId;
-							var in_data = { data: { id: database[id].VpcId, parent: cloud_id } }
-							if (find_point(database[id].VpcId).split("/")[1] != "0") {
-								in_data['classes'] = ['warning']
-							}
 
-							instance_nodes.push(in_data)
-						}
+                    
+					var in_data = { data: { id: database[id].VpcId, parent: cloud_id }, classes: ['vpc']}
+                    
+                    if (find_point(database[id].VpcId).split("/")[1] != "0") {
+						in_data['classes'] = ['warning', 'vpc']
 					}
+
+                    instance_nodes.push(in_data)
+                    
+                    in_data = {data: { id: id, parent: database[id].VpcId}}
+                    if (find_point(id).split("/")[1] != "0") {
+						in_data['classes'] = ['warning']
+					}
+                    instance_nodes.push(in_data)
+
 					instance_list.push(id);
-				}
-
-				for (var id in router) {
-					var elements = get_vpc_element(router[id].VpcId)
-					if (elements.length == 0) { continue }
-					
-					instance_nodes.push({ data: { 'id': id, 'parent': router[id].VpcId } })
-
-					for (var element in elements) {
-						instance_edges.push({ data: { source: id, target: elements[element] }, classes: 'router' })
-					}
-					instance_list.push(id)
 				}
 
 				for (var idx in storage){
@@ -378,10 +380,10 @@
 					}
 					instance_nodes.push(in_data);
 				} else {
-					var in_data = { data: { id: idx, parent: subnet_dict[instance_dict[idx][0]] } }
+					var in_data = { data: { id: idx, parent: subnet_dict[instance_dict[idx][0]] }, classes: ['subnet'] }
 
 					if (p.split("/")[1] != "0") {
-						in_data['classes'] = ['warning']
+						in_data['classes'] = ['warning', 'subnet']
 					}
 
 					instance_nodes.push(in_data);
@@ -400,10 +402,10 @@
 			}
 
 			for (var idx in subnet_dict) {
-				var in_data = { 'data': { id: idx, parent: subnet_dict[idx] } }
+				var in_data = { 'data': { id: idx, parent: subnet_dict[idx] }, classes: ['subnet'] }
 				var p = find_point(idx)
 				if (p.split("/")[1] != "0") {
-					in_data['classes'] = ['warning']
+					in_data['classes'] = ['warning', 'subnet']
 				}
 
 				instance_nodes.push(in_data);
